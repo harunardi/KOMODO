@@ -148,7 +148,7 @@ contains
 
     !
     ! Purpose:
-    !    To solve neutron noise problems
+    !    To solve neutron noise problems, but calculate eigenvalue with power iteration first (forward problem)
     !
 
     use sdata, only: nnod, aprad, apaxi, afrad, ftem, mtem, cden, &
@@ -159,23 +159,31 @@ contains
 
     IMPLICIT NONE
 
+    !Forward Calulation
+
     !Update xsec
     CALL XS_updt(bcon, ftem, mtem, cden, bpos)
 
     call print_head()
 
     !Outer iteration
+    if (bther == 0) then
+      CALL outer(1)
+    else
+      allocate(npow(nnod))
+      call th_iter(th_niter, 1)
+      call print_tail()
+    end if
+
+    call print_keff()
+
+    !Noise Calulation
+
+    !Update xsec
+    CALL XS_updt(bcon, ftem, mtem, cden, bpos)
+
+    !Outer iteration
     CALL outer_fs(1)
-
-    IF (aprad == 1 .OR. apaxi == 1) THEN
-        ALLOCATE(npow(nnod))
-        CALL get_power_dist(npow)
-    END IF
-
-    IF (powtot > 0.0) THEN
-      IF (aprad == 1) CALL AsmPow(npow)
-      IF (apaxi == 1) CALL AxiPow(npow)
-    END IF
 
     IF (afrad == 1) CALL AsmFlux()
 
