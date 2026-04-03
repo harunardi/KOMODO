@@ -26,6 +26,8 @@ SELECT CASE(mode)
         CALL fixedsrc()
     CASE('ADJOINT')
         CALL adjoint()
+    CASE('NOISE')
+        CALL noise()
     CASE('RODEJECT')
         IF (bther == 0) THEN
             CALL rod_eject()

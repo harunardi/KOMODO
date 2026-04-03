@@ -142,6 +142,47 @@ contains
 
   END SUBROUTINE fixedsrc
 
+  !******************************************************************************!
+
+  SUBROUTINE noise()
+
+    !
+    ! Purpose:
+    !    To solve neutron noise problems
+    !
+
+    use sdata, only: nnod, aprad, apaxi, afrad, ftem, mtem, cden, &
+    bcon, bpos, powtot, npow
+    use io,    only: AsmPow, AxiPow, AsmFlux, inp_read, bvtk, print_vtk
+    use xsec,  only: XS_updt
+    use cmfd,  only: outer_fs
+
+    IMPLICIT NONE
+
+    !Update xsec
+    CALL XS_updt(bcon, ftem, mtem, cden, bpos)
+
+    call print_head()
+
+    !Outer iteration
+    CALL outer_fs(1)
+
+    IF (aprad == 1 .OR. apaxi == 1) THEN
+        ALLOCATE(npow(nnod))
+        CALL get_power_dist(npow)
+    END IF
+
+    IF (powtot > 0.0) THEN
+      IF (aprad == 1) CALL AsmPow(npow)
+      IF (apaxi == 1) CALL AxiPow(npow)
+    END IF
+
+    IF (afrad == 1) CALL AsmFlux()
+
+    IF (bvtk == 1) CALL print_vtk(0)
+
+  END SUBROUTINE noise
+
  !****************************************************************************!
 
   SUBROUTINE cbsearch()
